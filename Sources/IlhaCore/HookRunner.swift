@@ -3,6 +3,12 @@ import Foundation
 /// Quanto o hook espera o ack de um pedido segurado antes de concluir que o app é antigo.
 public let holdAckTimeout: TimeInterval = 0.5
 
+/// Quanto um pedido (permissão ou pergunta) fica na ilha esperando você: 7 dias, na prática até você
+/// responder. Antes disso só sai se você responder no app de origem, devolver ("ou abrir no…"), a
+/// sessão acabar ou a ilha fechar. O `timeout` do `hooks.json` (PreToolUse, PermissionRequest) tem de
+/// passar disso; o `PluginConfigTests` confere.
+public let holdLimit: TimeInterval = 7 * 24 * 3600
+
 /// Corpo do binário `ilha-hook`: embrulha o evento do Claude Code e o manda ao app pelo socket.
 /// Devolve sempre o código 0 e nunca deixa um erro escapar — o hook não pode atrapalhar a sessão
 /// do usuário. Com `ILHA_INTERNAL=1` no ambiente não envia nada; conexão e envio têm prazo de 0,2 s.
@@ -19,7 +25,7 @@ public let holdAckTimeout: TimeInterval = 0.5
 /// número positivo, vale o processo pai do hook.
 public func runHook(
   stdin: Data, environment: [String: String], parentPID: Int32, socketPath: String,
-  holdTimeout: TimeInterval = 300
+  holdTimeout: TimeInterval = holdLimit
 ) -> (code: Int32, stdout: Data) {
   if environment["ILHA_INTERNAL"] == "1" { return (0, Data()) }
   let claudePID = environment["CLAUDE_PID"].flatMap { Int32($0) }.flatMap { $0 > 0 ? $0 : nil }

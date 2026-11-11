@@ -42,7 +42,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/bin/ilha-hook",
-            "timeout": 330
+            "timeout": 604830
           }
         ]
       }
@@ -78,7 +78,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/bin/ilha-hook",
-            "timeout": 330
+            "timeout": 604830
           }
         ]
       }

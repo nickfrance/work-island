@@ -1,6 +1,6 @@
 {
   "name": "work-island",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Mostra suas sessões do Claude Code na barra de menu.",
   "author": {
     "name": "Nicholas França"

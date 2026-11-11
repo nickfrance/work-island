@@ -27,8 +27,8 @@ final class AppModel: ObservableObject {
   /// Pedido respondido pela ilha (ou devolvido ao app de origem): usado pelas métricas.
   var onAnswered: ((PendingRequest, AnsweredOutcome) -> Void)?
 
-  /// Quanto um pedido espera pela ilha antes de voltar ao app de origem (resposta vazia).
-  static let holdTimeout: TimeInterval = 300
+  /// Quanto um pedido espera pela ilha antes de voltar ao app de origem (resposta vazia): `holdLimit`.
+  static let holdTimeout: TimeInterval = holdLimit
 
   private var server: EventServer?
   private var timer: Timer?

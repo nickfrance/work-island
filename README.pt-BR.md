@@ -78,7 +78,7 @@ Como a ilha se comporta: com um pedido esperando, ela cresce e muda para "precis
 
 Teclado, com o painel aberto e fora do campo de texto: `1`–`9` escolhem a opção da pergunta (depois da última vem "Outra resposta…"); `↩` confirma ("Permitir" numa permissão, "Enviar" ou "Próxima" numa pergunta; dentro do campo de texto o `↩` também envia e `⇧↩` quebra a linha); `Esc` nega a permissão em foco (numa pergunta só fecha o painel; com o cursor num campo de texto só tira o foco). Tecla segurada nunca responde nada.
 
-Se você não responder, a ilha segura o pedido por 5 minutos. Passado esse tempo, ou se você clicar em "ou abrir no Terminal" (o nome muda conforme o app: VS Code, Claude...), o pedido volta para o app onde a sessão roda, e o cartão mostra "Voltou para o Terminal". Respondendo no app de origem antes da ilha, o cartão da ilha some com "Já respondido no Terminal".
+A ilha segura o pedido até você responder (no limite, 7 dias). Enquanto isso, a pergunta não aparece no app de origem. Para responder lá, clique em "ou abrir no Terminal" (o nome muda conforme o app: VS Code, Claude...): o pedido volta para o app onde a sessão roda, e o cartão mostra "Voltou para o Terminal". Fechar a sessão ou a ilha também devolve o pedido. Respondendo no app de origem antes da ilha, o cartão da ilha some com "Já respondido no Terminal".
 
 ### Uso do plano
 
@@ -128,7 +128,7 @@ flowchart LR
 ```
 
 1. **Os eventos, pelo plugin.** O plugin liga um hook pequeno (`ilha-hook`) em 11 eventos do Claude Code: a sessão começou, você mandou um prompt, uma ferramenta rodou, pediu permissão, parou, terminou. A cada evento, o hook manda uma linha de JSON para a ilha por um socket local (`~/Library/Application Support/Work Island/ilha.sock`). Com a ilha fechada, ele sai na hora, sem erro.
-2. **As respostas, pelo mesmo hook.** Num pedido de permissão ou numa pergunta, o hook espera na conexão. Você responde na ilha, a resposta volta pelo socket e o hook a entrega ao Claude Code como decisão. Sem resposta em 5 minutos, o pedido volta para o app de origem.
+2. **As respostas, pelo mesmo hook.** Num pedido de permissão ou numa pergunta, o hook espera na conexão. Você responde na ilha, a resposta volta pelo socket e o hook a entrega ao Claude Code como decisão. O pedido espera até você responder, devolver ou a sessão acabar.
 3. **O status, pelo registro.** O Claude Code mantém um arquivo por sessão em `~/.claude/sessions/` dizendo se ela está ocupada, esperando ou ociosa. A ilha lê esse registro a cada 2 s. É assim que ela vê sessões abertas antes do plugin, e turnos cujo evento se perdeu.
 4. **Título e pergunta, pela conversa.** Da transcrição em `~/.claude/projects/`, a ilha lê só o final: o título da conversa e se o turno terminou com uma pergunta para você. Isso inclui a caixa de próximo passo do app desktop, onde a pergunta não aparece no texto.
 
