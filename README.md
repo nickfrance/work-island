@@ -6,15 +6,6 @@ A Work Island é uma pequena ilha preta na barra de menu do Mac. Ela mostra as s
 
 https://github.com/user-attachments/assets/0e607428-7c54-4235-bf92-d93aa134041a
 
-<p align="center">
-  <img src="docs/images/ilha.png" width="560" alt="A ilha fechada na barra de menu, com uma etiqueta por sessão e o anel de uso do plano">
-</p>
-<p align="center">
-  <img src="docs/images/sessoes.png" width="380" alt="O cartão aberto com as sessões: uma precisa de você, uma concluída e duas trabalhando">
-  &nbsp;
-  <img src="docs/images/pergunta.png" width="380" alt="O cartão com uma pergunta do Claude e as opções para responder ali mesmo">
-</p>
-
 Por enquanto, só para macOS.
 
 [Read in English](README.en.md)
