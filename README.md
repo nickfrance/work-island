@@ -60,7 +60,7 @@ Remove o plugin do Claude Code, o item de início, o app e a pasta de dados (`~/
 
 Passe o mouse na ilha para ver a espiada, com as sessões e o uso do plano. Clique para abrir o painel. Clique numa sessão para trazer o app dela para a frente. Clique com o botão direito numa sessão e escolha "Remover da ilha" para tirá-la da lista. Ela volta sozinha quando fizer algo novo.
 
-As configurações ficam na engrenagem do painel, ou no clique direito na ilha → "Configurações…" (⌘,): abrir ao ligar o Mac, enviar métricas de uso anônimas, tirar da ilha sessões paradas há 6 h, 12 h, 24 h ou nunca, e o estado do plugin (com "Instalar de novo", se algo deu errado).
+As configurações ficam na engrenagem do painel, ou no clique direito na ilha → "Configurações…" (⌘,): abrir ao ligar o Mac, tirar da ilha sessões paradas há 6 h, 12 h, 24 h ou nunca, e o estado do plugin (com "Instalar de novo", se algo deu errado).
 
 Idiomas: português (padrão) e inglês, escolhidos pelo idioma do macOS, inclusive nos cartões, nas horas e nas datas.
 
@@ -134,41 +134,11 @@ flowchart LR
 3. **O status, pelo registro.** O Claude Code mantém um arquivo por sessão em `~/.claude/sessions/` dizendo se ela está ocupada, esperando ou ociosa. A ilha lê esse registro a cada 2 s. É assim que ela vê sessões abertas antes do plugin, e turnos cujo evento se perdeu.
 4. **Título e pergunta, pela conversa.** Da transcrição em `~/.claude/projects/`, a ilha lê só o final: o título da conversa e se o turno terminou com uma pergunta para você. Isso inclui a caixa de próximo passo do app desktop, onde a pergunta não aparece no texto.
 
-O uso do plano vem de rodar o seu Claude Code (`claude -p /usage`), como explicado em [Uso do plano](#uso-do-plano). Nada disso sai do Mac. O que sai está logo abaixo.
+O uso do plano vem de rodar o seu Claude Code (`claude -p /usage`), como explicado em [Uso do plano](#uso-do-plano). Nada disso sai do seu Mac.
 
-## O que a Work Island envia
+## O que sai do seu Mac
 
-As versões publicadas enviam métricas de uso anônimas, para eu saber se a ilha está sendo útil e o que melhorar. **Nada das suas conversas, pastas, comandos ou conta.** Só estes sete eventos, só com estas chaves:
-
-| Evento | Chaves | Valores |
-| --- | --- | --- |
-| `ilha_ativa` | `minutos` | Minutos com o app aberto (Mac acordado) no último dia de uso. Sai uma vez, quando o dia vira. No máximo 1440. |
-| `cartao_aberto` | `tipo`, `estado` | `tipo`: `espiada` ou `painel`. `estado`: `needsYou`, `done`, `working` ou `idle`. |
-| `cartao_fechado` | `segundos` | Quantos segundos a espiada ou o painel ficou aberto. |
-| `sessao_clicada` | `estado`, `origem` | O estado da sessão (`needsYou`, `done`, `doneStale`, `working` ou `idle`) e onde ela roda: `desktop`, `vscode`, `terminal` ou `unknown`. |
-| `respondeu_na_ilha` | `pedido`, `resultado` | `pedido`: `permissao` ou `pergunta`. `resultado`: `permitiu`, `negou`, `respondeu` ou `devolveu`. |
-| `atualizou` | `de`, `para` | A versão antiga e a nova do app. |
-| `configuracao_mudada` | `linha`, `valor` | `linha`: `abrir_ao_ligar`, `metricas` ou `adormecer`. `valor`: `true`, `false`, `h6`, `h12`, `h24` ou `never`. |
-
-Os eventos esperam numa fila local (`~/Library/Application Support/Work Island/metrics-queue.json`, no máximo 1000) e saem em lotes a cada 15 min (só depois de o aviso "Métricas anônimas ligadas" aparecer), num `POST` JSON:
-
-```json
-{
-  "v": 1,
-  "id": "<UUID anônimo aleatório, criado uma vez e guardado nas preferências>",
-  "app": "0.3.0",
-  "os": "15.6.1",
-  "events": [
-    { "name": "cartao_aberto", "at": "2026-11-10T14:03:22Z", "props": { "tipo": "painel", "estado": "needsYou" } }
-  ]
-}
-```
-
-O `id` é um UUID aleatório. Ele não está ligado a você, ao seu Mac nem à sua conta do Claude. O código que monta cada evento está em [`Sources/IlhaCore/Metrics.swift`](Sources/IlhaCore/Metrics.swift).
-
-**Para desligar:** Configurações → "Enviar métricas de uso anônimas". Desligar também apaga a fila local. Versões compiladas a partir do código nunca enviam nada: só as montadas pelo `scripts/release.sh` levam o endereço do receptor.
-
-Fora as métricas, o app só acessa a internet para procurar atualizações nas Releases do GitHub. O uso do plano vem do seu próprio Claude Code.
+Nada sobre você: nem suas conversas, nem pastas, comandos ou conta. A Work Island só acessa a internet para procurar atualizações nas Releases do GitHub. O uso do plano vem do seu próprio Claude Code.
 
 ## No que ela é diferente
 
@@ -186,9 +156,7 @@ scripts/bundle-app.sh          # compila o app universal (e o hook) e monta buil
 open "build/Work Island.app"   # na primeira abertura, instala o plugin que vem dentro do app
 ```
 
-Versões compiladas a partir do código não enviam métricas.
-
-Versões compiladas a partir do código não se atualizam sozinhas: a ilha ainda avisa quando há versão nova, e o "Atualizar" mostra a linha de instalação, que instala a versão publicada (essa envia métricas anônimas, a não ser que você as desligue).
+Versões compiladas a partir do código não se atualizam sozinhas: a ilha ainda avisa quando há versão nova, e o "Atualizar" mostra a linha de instalação, que instala a versão publicada.
 
 O app reinstala o plugin quando a versão em `plugin/.claude-plugin/plugin.json` é diferente da instalada. Depois de mexer no hook (`Sources/ilha-hook`), suba essa versão, recompile e reabra o app. Para testar o plugin sem instalar, use `claude --plugin-dir plugin` (rode antes o `scripts/build-plugin.sh`, para existir o `plugin/bin/ilha-hook`).
 
