@@ -149,4 +149,4 @@ When you're done, quit the debug app (`pkill -TERM -x WorkIsland`) and reopen th
 
 ## License
 
-[MIT](LICENSE)
+Copyright © 2026 Nicholas França. Released under the [GNU General Public License v3.0](LICENSE): you can use, study, change and share it, modified versions included, as long as they also ship with their source code under the same license.
