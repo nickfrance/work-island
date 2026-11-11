@@ -6,7 +6,7 @@ A Work Island é uma pequena ilha preta na barra de menu do Mac. Ela mostra as s
 
 https://github.com/user-attachments/assets/0e607428-7c54-4235-bf92-d93aa134041a
 
-Por enquanto, só para macOS.
+Por enquanto, só para macOS, em breve disponível também para Windows.
 
 [Read in English](README.en.md)
 
@@ -14,9 +14,9 @@ Por enquanto, só para macOS.
 
 Eu trabalho com várias sessões do Claude Code ao mesmo tempo: umas no app desktop do Claude, outras no VS Code, outras no Terminal. Enquanto uma trabalha, eu sigo em outra. O problema é voltar: eu perdia tempo descobrindo qual sessão tinha parado esperando uma aprovação, qual tinha feito uma pergunta e qual já tinha terminado. Às vezes uma ficava minutos parada por causa de um "Permitir?" numa janela que eu não estava olhando.
 
-E tinha o limite do plano: eu só via que estava perto quando batia nele.
+E tinha o limite do plano que eu só me dava conta que estava perto quando estava quase acabando.
 
-Já existem ferramentas que mostram sessões no notch, mas nenhuma ficava na barra de menu, mostrava o uso do plano e acompanhava também o app desktop. Então eu fiz a minha: um lugar só, sempre à vista, que diz quem precisa de mim e me deixa responder dali.
+Então inspirado na Dynamic Island do iPhone eu fiz a minha para Mac: um lugar só, sempre à vista, que diz quem precisa de mim e me deixa responder dali.
 
 ## Instalar
 
