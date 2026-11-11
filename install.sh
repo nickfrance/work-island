@@ -119,7 +119,10 @@ main() {
   echo
   echo "Work Island installed at: $target"
   echo "The Claude Code plugin and the login item are set up the first time the app opens."
-  echo "Work Island sends anonymous usage metrics (time open, clicks; nothing from your conversations, folders or account); turn them off in Settings."
+  # Only a build with a metrics address sends anything; say so only then.
+  if [ -n "$(plutil -extract WorkIslandMetricsURL raw -o - "$target/Contents/Info.plist" 2>/dev/null || true)" ]; then
+    echo "Work Island sends anonymous usage metrics (time open, clicks; nothing from your conversations, folders or account); turn them off in Settings."
+  fi
   echo "To uninstall: curl -fsSL https://raw.githubusercontent.com/nickfrance/work-island/main/uninstall.sh | bash"
 }
 
