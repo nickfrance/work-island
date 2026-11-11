@@ -4,6 +4,8 @@
 
 Work Island is a small black island in your Mac's menu bar. It shows your Claude Code sessions: which ones are working, which ones need you, and which ones are done. When Claude asks for a permission or asks you a question, you answer right there, without switching windows. It also shows how much of your plan you've used.
 
+https://github.com/user-attachments/assets/0e607428-7c54-4235-bf92-d93aa134041a
+
 <p align="center">
   <img src="docs/images/island.png" width="560" alt="The closed island in the menu bar, with one tag per session and the plan usage ring">
 </p>
