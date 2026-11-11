@@ -5,8 +5,8 @@ import IlhaCore
 /// Atualização pela própria ilha: procura a última release no GitHub (10 s depois de abrir e a cada
 /// 6 h), baixa o zip, confere o resumo e o .app de dentro, e troca o app por um script que espera
 /// este processo sair e reabre a versão nova. Nunca reinicia com um pedido segurado na ilha.
-/// Versão compilada do código (sem receptor de métricas): procura e avisa, mas não se instala
-/// sozinha; o "Atualizar" mostra a linha de instalação, que traz a versão publicada.
+/// Versão compilada do código (sem `WorkIslandRelease` no Info.plist): procura e avisa, mas não se
+/// instala sozinha; o "Atualizar" mostra a linha de instalação, que traz a versão publicada.
 @MainActor
 final class UpdateController: ObservableObject {
   /// Versão mais nova que a atual; `nil` sem novidade (ou antes da primeira procura).
@@ -38,11 +38,11 @@ final class UpdateController: ObservableObject {
   private let apiURL: URL
   private let debug: Bool
   /// `ILHA_DEBUG=1` + `WORK_ISLAND_AUTO_UPDATE=1`: instala sozinho ao achar versão nova (teste à mão;
-  /// o app precisa de receptor, ex. `METRICS_URL=http://127.0.0.1:9/ scripts/bundle-app.sh`).
+  /// o app precisa ser montado como publicado: `RELEASE=1 scripts/bundle-app.sh`).
   private let autoInstall: Bool
   private let firstCheckDelay: Duration
-  /// Com receptor de métricas no Info.plist (versão do `release.sh`): só ela se troca sozinha. A
-  /// compilada do código atualiza pela linha de instalação (que traz a publicada, com métricas).
+  /// Versão do `release.sh` (`ReleaseBuild`): só ela se troca sozinha, com ou sem métricas. A
+  /// compilada do código atualiza pela linha de instalação (que traz a publicada).
   private let selfInstalls: Bool
   private var checking: Task<Void, Never>?
   private var installing: Task<Void, Never>?
@@ -56,7 +56,7 @@ final class UpdateController: ObservableObject {
     self.model = model
     let info = Bundle.main.infoDictionary
     currentVersion = (info?["CFBundleShortVersionString"] as? String).flatMap(SemVer.init)
-    selfInstalls = MetricsController.endpoint(from: info) != nil
+    selfInstalls = ReleaseBuild.isRelease(info)
     let environment = ProcessInfo.processInfo.environment
     apiURL = environment["WORK_ISLAND_RELEASE_API"].flatMap(URL.init(string:)) ?? Self.releaseAPI
     debug = environment["ILHA_DEBUG"] == "1"
@@ -101,7 +101,7 @@ final class UpdateController: ObservableObject {
     case .idle, .needsTerminal, .failed: break
     }
     guard selfInstalls else {
-      log("versão sem receptor de métricas (compilada do código): atualização pelo Terminal")
+      log("versão compilada do código: atualização pelo Terminal")
       phase = .needsTerminal
       return
     }

@@ -5,11 +5,12 @@
 #
 # 1. grava a versão em plugin/.claude-plugin/plugin.json (app e plugin sempre iguais); sem
 #    --dry-run, se precisou gravar, para pedindo o commit, e recusa árvore com mudanças não commitadas;
-# 2. VERSION=<versão> METRICS_URL="$WORK_ISLAND_METRICS_URL" scripts/bundle-app.sh;
+# 2. RELEASE=1 VERSION=<versão> METRICS_URL="$WORK_ISLAND_METRICS_URL" scripts/bundle-app.sh;
 # 3. zipa build/Work Island.app em dist/WorkIsland.zip e imprime o SHA-256;
 # 4. sem --dry-run: gh release create v<versão> dist/WorkIsland.zip --repo nickfrance/work-island.
 #
-# Sem WORK_ISLAND_METRICS_URL, pergunta se segue sem métricas (a versão não envia nada).
+# Sem WORK_ISLAND_METRICS_URL, pergunta se segue sem métricas (a versão não envia nada, mas
+# continua se atualizando sozinha).
 # O --dry-run nunca chama o gh e aceita árvore suja. Sem --notes-file, as notas são geradas em
 # dist/notes-v<versão>.md.
 #
@@ -96,7 +97,7 @@ if [ -z "$METRICS_URL" ]; then
 fi
 
 # 2. App universal, com a versão e o endereço das métricas no Info.plist.
-VERSION="$VERSION" METRICS_URL="$METRICS_URL" "$ROOT/scripts/bundle-app.sh"
+RELEASE=1 VERSION="$VERSION" METRICS_URL="$METRICS_URL" "$ROOT/scripts/bundle-app.sh"
 
 plist="$APP/Contents/Info.plist"
 if [ "$(plutil -extract CFBundleShortVersionString raw -o - "$plist")" != "$VERSION" ]; then
@@ -105,6 +106,10 @@ if [ "$(plutil -extract CFBundleShortVersionString raw -o - "$plist")" != "$VERS
 fi
 if [ "$(plutil -extract WorkIslandMetricsURL raw -o - "$plist" 2>/dev/null || true)" != "$METRICS_URL" ]; then
   echo "o Info.plist não tem o endereço das métricas esperado" >&2
+  exit 1
+fi
+if [ "$(plutil -extract WorkIslandRelease raw -o - "$plist" 2>/dev/null || true)" != "true" ]; then
+  echo "o Info.plist não está marcado como versão publicada (WorkIslandRelease)" >&2
   exit 1
 fi
 archs="$(lipo -archs "$APP/Contents/MacOS/WorkIsland")"

@@ -65,7 +65,6 @@ final class MetricsController {
     session = URLSession(configuration: configuration)
   }
 
-  /// Também usado pela atualização: sem receptor (versão compilada do código), ela não se instala sozinha.
   nonisolated static func endpoint(from info: [String: Any]?) -> URL? {
     guard let raw = (info?["WorkIslandMetricsURL"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
           !raw.isEmpty, let url = URL(string: raw),

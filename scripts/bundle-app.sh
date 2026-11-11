@@ -8,6 +8,8 @@ cd "$ROOT"
 # Versão do app = a do plugin (plugin.json), para os dois nunca divergirem; VERSION=… só no release.sh.
 VERSION="${VERSION:-$(plutil -extract version raw -o - "$ROOT/plugin/.claude-plugin/plugin.json")}"
 METRICS_URL="${METRICS_URL:-}"
+# RELEASE=1 (só o release.sh): marca a versão publicada, a única que se atualiza sozinha.
+if [ "${RELEASE:-0}" = "1" ]; then RELEASE_XML="<true/>"; else RELEASE_XML="<false/>"; fi
 # Escapa o endereço para o XML do Info.plist.
 METRICS_URL_XML="${METRICS_URL//&/&amp;}"; METRICS_URL_XML="${METRICS_URL_XML//</&lt;}"; METRICS_URL_XML="${METRICS_URL_XML//>/&gt;}"
 
@@ -70,6 +72,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<true/>
 	<key>WorkIslandMetricsURL</key>
 	<string>$METRICS_URL_XML</string>
+	<key>WorkIslandRelease</key>
+	$RELEASE_XML
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>
