@@ -1,0 +1,148 @@
+/* Interface text in English. Every key also exists in pt-BR.lproj. */
+
+/* Session state, in the peek and the panel. */
+"state.working" = "working";
+"state.needsYou" = "needs you";
+"state.done" = "done";
+"state.doneMinutesAgo" = "done %d min ago";
+"state.idle" = "idle";
+
+/* Invitation at the top of the peek; plurals live in the .stringsdict. */
+"peek.cta.reply" = "click to reply";
+"peek.cta.open" = "click to open";
+"peek.cta.openPanel" = "Click to open the panel";
+
+/* Panel. */
+"panel.title.result" = "Got results to see";
+"panel.title.nothing" = "Nothing waiting for you";
+"panel.title.inApp" = "A question is waiting for you";
+"panel.subtitle.result" = "Tap a finished session to open where it runs.";
+"panel.subtitle.working" = "Claude is working on your sessions.";
+"panel.subtitle.idle" = "No sessions running right now.";
+"panel.subtitle.inApp" = "Tap the session to answer where it runs.";
+"panel.row.hint" = "Opens where the session runs";
+"panel.row.hint.done" = "Opens where the session runs and marks it as seen";
+"panel.row.menu.open" = "Open session";
+"panel.row.menu.dismiss" = "Remove from island";
+
+/* Plan usage. "resets %@" gets the time in the system format. */
+"usage.session" = "Session %d%%";
+"usage.week" = "week %d%%";
+"usage.resets" = "resets %@";
+"usage.updatedMinutesAgo" = "updated %d min ago";
+"usage.updatedHoursAgo" = "updated %d h ago";
+"usage.updatedDaysAgo" = "updated %d d ago";
+"usage.loading" = "reading usage…";
+"usage.unreadable" = "couldn't read usage";
+"usage.unlimited" = "account has no plan limit";
+"usage.noClaude" = "Claude Code not found";
+/* Names under the panel rings. */
+"usage.ring.session" = "Session";
+"usage.ring.week" = "Week";
+"usage.accessibility.session" = "Usage: session %d%%";
+"usage.accessibility" = "Usage: %@";
+
+/* Answer cards in the panel. Titles get the request's term (command, file, domain, tool). */
+"card.title.run" = "Run %@?";
+"card.title.edit" = "Edit %@?";
+"card.title.write" = "Write %@?";
+"card.edit.replaceAll" = "all occurrences";
+"card.title.open" = "Open %@?";
+"card.title.use" = "Use %@?";
+"card.risky" = "Reaches outside your Mac";
+"card.deny" = "Deny";
+"card.denySend" = "Deny and send";
+"card.allow" = "Allow";
+"card.denyExplain" = "Deny and explain…";
+"card.alwaysAllow" = "Always allow here";
+"card.why.placeholder" = "Tell Claude what to do instead";
+/* "or open in VS Code": the first part and the link. */
+"card.openIn.prefix" = "or";
+"card.openIn" = "open in %@";
+"card.openIn.unknown" = "open in the original app";
+"card.question.answer" = "Answer";
+"card.question.send" = "Send";
+"card.question.sendCount" = "Send (%d)";
+"card.question.next" = "Next";
+"card.question.other" = "Other answer…";
+"card.question.recommended" = "RECOMMENDED";
+"card.question.many" = "Pick as many as you like.";
+/* Several questions in one request: "1 of 2". */
+"card.question.step" = "%d of %d";
+/* Long question and what Claude wrote right before it. */
+"card.question.more" = "see full question";
+"card.question.less" = "show less";
+"card.context.who" = "Claude, before asking";
+"card.context.more" = "Read all ↓";
+"card.context.less" = "Show less ↑";
+"card.when.now" = "now";
+"card.when.minutes" = "%d min ago";
+"card.when.hours" = "%d h ago";
+"card.kind.permission" = "permission";
+"card.kind.question" = "question";
+"card.queue" = "Up next";
+"card.pager" = "Request %d of %d";
+
+/* Result on the card after answering. */
+"result.allowed" = "Allowed · Claude went ahead";
+"result.denied" = "Denied · Claude will take another way";
+"result.deniedExplained" = "Denied with a note · Claude will take another way";
+"result.alwaysAllowed" = "Always allowed in this project";
+"result.answered" = "Answered · %@";
+"result.elsewhere" = "Already answered in %@";
+"result.elsewhere.unknown" = "Already answered in the original app";
+"result.handedBack" = "Back in %@";
+"result.handedBack.unknown" = "Back in the original app";
+
+/* Right-click menu on the island. */
+"menu.quit" = "Quit Work Island";
+
+/* Settings inside the card (gear on the panel and "Settings…" in the menu). */
+"settings.menuItem" = "Settings…";
+"settings.title" = "Settings";
+"settings.back" = "Back";
+"settings.group.general" = "General";
+"settings.openAtLogin" = "Open at login";
+"settings.metrics" = "Send anonymous usage metrics";
+"settings.metrics.detail" = "Only time in use and clicks. Nothing from your chats, folders or account.";
+"settings.group.sessions" = "Sessions";
+"settings.dormant" = "Hide idle sessions after";
+"settings.dormant.detail" = "They come back on their own when you use them";
+"settings.dormant.h6" = "6 h";
+"settings.dormant.h12" = "12 h";
+"settings.dormant.h24" = "24 h";
+"settings.dormant.never" = "Never";
+"settings.group.claudeCode" = "Claude Code";
+"settings.plugin" = "Island plugin";
+"settings.plugin.detail" = "Answer from the island in the app, VS Code and terminal";
+"settings.plugin.installed" = "● Installed";
+"settings.plugin.checking" = "Checking…";
+"settings.plugin.claudeMissing" = "Claude Code not found";
+"settings.plugin.failed" = "Didn't install";
+"settings.plugin.reinstall" = "Install again";
+"settings.version" = "Work Island %@";
+"settings.updateTo" = "Update to %@";
+"settings.quit" = "Quit Work Island";
+
+/* Notices at the top of the card (new version, update, metrics, sessions from before the plugin). */
+"notice.available.title" = "Work Island %@ available";
+"notice.available.current" = "You're on %@";
+"notice.whatsNew" = "What's new ↗";
+"notice.update" = "Update";
+"notice.waiting" = "Updates once you answer";
+"notice.downloading" = "Downloading %@…";
+"notice.downloading.unknown" = "Downloading the new version…";
+"notice.restarting.title" = "Restarting the island…";
+"notice.restarting.detail" = "Your sessions keep running";
+"notice.updated" = "Updated to %@";
+"notice.failed.title" = "Couldn't update";
+"notice.failed.detail" = "Try again later";
+"notice.terminal.title" = "Update from Terminal";
+"notice.terminal.copy" = "Copy";
+"notice.terminal.copied" = "Copied";
+"notice.metrics.title" = "Anonymous metrics on";
+"notice.metrics.detail" = "Work Island sends anonymous usage metrics, like time open and clicks. It never sends what you do: nothing from your conversations, folders or account. You can turn this off in settings.";
+"notice.pluginSessions.title" = "Sessions from before";
+"notice.pluginSessions.detail" = "Sessions opened before the install show up, but only answer through the island once reopened.";
+"notice.dismiss" = "Dismiss";
+"island.updateAvailable" = "New version available";

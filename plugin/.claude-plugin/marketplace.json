@@ -1,0 +1,14 @@
+{
+  "name": "work-island",
+  "description": "Work Island: suas sessões do Claude Code na barra de menu.",
+  "owner": {
+    "name": "Nicholas França"
+  },
+  "plugins": [
+    {
+      "name": "work-island",
+      "source": "./",
+      "description": "Mostra suas sessões do Claude Code na barra de menu."
+    }
+  ]
+}

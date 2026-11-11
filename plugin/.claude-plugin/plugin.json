@@ -1,0 +1,8 @@
+{
+  "name": "work-island",
+  "version": "0.3.0",
+  "description": "Mostra suas sessões do Claude Code na barra de menu.",
+  "author": {
+    "name": "Nicholas França"
+  }
+}

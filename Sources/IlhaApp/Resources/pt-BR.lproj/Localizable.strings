@@ -1,0 +1,148 @@
+/* Textos da interface em português (idioma padrão). Toda chave existe também em en.lproj. */
+
+/* Estado de uma sessão, na espiada e no painel. */
+"state.working" = "trabalhando";
+"state.needsYou" = "precisa de você";
+"state.done" = "concluído";
+"state.doneMinutesAgo" = "concluído há %d min";
+"state.idle" = "parado";
+
+/* Convite no topo da espiada; os plurais estão no .stringsdict. */
+"peek.cta.reply" = "clique para responder";
+"peek.cta.open" = "clique para abrir";
+"peek.cta.openPanel" = "Clique para abrir o painel";
+
+/* Painel. */
+"panel.title.result" = "Tem resultado pra ver";
+"panel.title.nothing" = "Nada esperando por você";
+"panel.title.inApp" = "Tem pergunta esperando você";
+"panel.subtitle.result" = "Toque numa sessão concluída para abrir onde ela roda.";
+"panel.subtitle.working" = "O Claude está trabalhando nas suas sessões.";
+"panel.subtitle.idle" = "Nenhuma sessão rodando agora.";
+"panel.subtitle.inApp" = "Toque na sessão para responder onde ela roda.";
+"panel.row.hint" = "Abre onde a sessão roda";
+"panel.row.hint.done" = "Abre onde a sessão roda e marca como vista";
+"panel.row.menu.open" = "Abrir sessão";
+"panel.row.menu.dismiss" = "Remover da ilha";
+
+/* Uso do plano. "renova %@" recebe a hora no formato do sistema. */
+"usage.session" = "Sessão %d%%";
+"usage.week" = "semana %d%%";
+"usage.resets" = "renova %@";
+"usage.updatedMinutesAgo" = "atualizado há %d min";
+"usage.updatedHoursAgo" = "atualizado há %d h";
+"usage.updatedDaysAgo" = "atualizado há %d d";
+"usage.loading" = "lendo o uso…";
+"usage.unreadable" = "não consegui ler o uso";
+"usage.unlimited" = "conta sem limite de plano";
+"usage.noClaude" = "Claude Code não encontrado";
+/* Nomes embaixo dos anéis do painel. */
+"usage.ring.session" = "Sessão";
+"usage.ring.week" = "Semana";
+"usage.accessibility.session" = "Uso: sessão %d%%";
+"usage.accessibility" = "Uso: %@";
+
+/* Cartões de resposta no painel. Os títulos recebem o termo do pedido (comando, arquivo, domínio, ferramenta). */
+"card.title.run" = "Rodar %@?";
+"card.title.edit" = "Editar %@?";
+"card.title.write" = "Gravar %@?";
+"card.edit.replaceAll" = "todas as ocorrências";
+"card.title.open" = "Abrir %@?";
+"card.title.use" = "Usar %@?";
+"card.risky" = "Mexe fora do Mac";
+"card.deny" = "Negar";
+"card.denySend" = "Negar e enviar";
+"card.allow" = "Permitir";
+"card.denyExplain" = "Negar e explicar…";
+"card.alwaysAllow" = "Sempre permitir aqui";
+"card.why.placeholder" = "Diga ao Claude o que fazer em vez disso";
+/* "ou abrir no VS Code": a primeira parte e o link. */
+"card.openIn.prefix" = "ou";
+"card.openIn" = "abrir no %@";
+"card.openIn.unknown" = "abrir no app de origem";
+"card.question.answer" = "Responder";
+"card.question.send" = "Enviar";
+"card.question.sendCount" = "Enviar (%d)";
+"card.question.next" = "Próxima";
+"card.question.other" = "Outra resposta…";
+"card.question.recommended" = "RECOMENDADO";
+"card.question.many" = "Escolha quantas quiser.";
+/* Várias perguntas no mesmo pedido: "1 de 2". */
+"card.question.step" = "%d de %d";
+/* Pergunta longa e o que o Claude escreveu antes dela. */
+"card.question.more" = "ver pergunta inteira";
+"card.question.less" = "mostrar menos";
+"card.context.who" = "Claude, antes de perguntar";
+"card.context.more" = "Ler tudo ↓";
+"card.context.less" = "Recolher ↑";
+"card.when.now" = "agora";
+"card.when.minutes" = "há %d min";
+"card.when.hours" = "há %d h";
+"card.kind.permission" = "permissão";
+"card.kind.question" = "pergunta";
+"card.queue" = "Na fila";
+"card.pager" = "Pedido %d de %d";
+
+/* Resultado no cartão depois da resposta. */
+"result.allowed" = "Permitido · o Claude seguiu";
+"result.denied" = "Negado · o Claude vai por outro caminho";
+"result.deniedExplained" = "Negado com explicação · o Claude vai por outro caminho";
+"result.alwaysAllowed" = "Sempre permitido neste projeto";
+"result.answered" = "Respondido · %@";
+"result.elsewhere" = "Já respondido no %@";
+"result.elsewhere.unknown" = "Já respondido no app de origem";
+"result.handedBack" = "Voltou para o %@";
+"result.handedBack.unknown" = "Voltou para o app de origem";
+
+/* Menu do clique direito na ilha. */
+"menu.quit" = "Sair da Work Island";
+
+/* Configurações dentro do cartão (engrenagem no painel e "Configurações…" no menu). */
+"settings.menuItem" = "Configurações…";
+"settings.title" = "Configurações";
+"settings.back" = "Voltar";
+"settings.group.general" = "Geral";
+"settings.openAtLogin" = "Abrir ao ligar o Mac";
+"settings.metrics" = "Enviar métricas de uso anônimas";
+"settings.metrics.detail" = "Só tempo de uso e cliques. Nada das suas conversas, pastas ou conta.";
+"settings.group.sessions" = "Sessões";
+"settings.dormant" = "Tirar da ilha sessões paradas há";
+"settings.dormant.detail" = "Voltam sozinhas quando você mexer nelas";
+"settings.dormant.h6" = "6 h";
+"settings.dormant.h12" = "12 h";
+"settings.dormant.h24" = "24 h";
+"settings.dormant.never" = "Nunca";
+"settings.group.claudeCode" = "Claude Code";
+"settings.plugin" = "Plugin da ilha";
+"settings.plugin.detail" = "Responder pela ilha no app, VS Code e terminal";
+"settings.plugin.installed" = "● Instalado";
+"settings.plugin.checking" = "Verificando…";
+"settings.plugin.claudeMissing" = "Claude Code não encontrado";
+"settings.plugin.failed" = "Não instalou";
+"settings.plugin.reinstall" = "Instalar de novo";
+"settings.version" = "Work Island %@";
+"settings.updateTo" = "Atualizar para %@";
+"settings.quit" = "Sair da Work Island";
+
+/* Avisos no topo do cartão (versão nova, atualização, métricas, sessões de antes do plugin). */
+"notice.available.title" = "Work Island %@ disponível";
+"notice.available.current" = "Você está na %@";
+"notice.whatsNew" = "O que mudou ↗";
+"notice.update" = "Atualizar";
+"notice.waiting" = "Atualiza quando você responder";
+"notice.downloading" = "Baixando a %@…";
+"notice.downloading.unknown" = "Baixando a versão nova…";
+"notice.restarting.title" = "Reiniciando a ilha…";
+"notice.restarting.detail" = "Suas sessões continuam rodando";
+"notice.updated" = "Atualizada para a %@";
+"notice.failed.title" = "Não deu para atualizar";
+"notice.failed.detail" = "Tente de novo mais tarde";
+"notice.terminal.title" = "Atualize pelo Terminal";
+"notice.terminal.copy" = "Copiar";
+"notice.terminal.copied" = "Copiado";
+"notice.metrics.title" = "Métricas anônimas ligadas";
+"notice.metrics.detail" = "A Work Island envia métricas anônimas de uso, como tempo aberta e cliques. Ela nunca envia o que você faz: nada das suas conversas, pastas ou conta. Dá para desligar nas configurações.";
+"notice.pluginSessions.title" = "Sessões de antes";
+"notice.pluginSessions.detail" = "Sessões abertas antes da instalação aparecem, mas só respondem pela ilha depois de reabertas.";
+"notice.dismiss" = "Dispensar";
+"island.updateAvailable" = "Versão nova disponível";

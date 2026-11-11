@@ -1,0 +1,7 @@
+.build/
+build/
+plugin/bin/
+spike/
+.superpowers/
+.DS_Store
+dist/
