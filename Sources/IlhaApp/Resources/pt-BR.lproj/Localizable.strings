@@ -112,6 +112,10 @@
 "settings.dormant.h12" = "12 h";
 "settings.dormant.h24" = "24 h";
 "settings.dormant.never" = "Nunca";
+"settings.group.notices" = "Avisos";
+"settings.notice.needsYou" = "Avisar quando precisar de você";
+"settings.notice.done" = "Avisar quando concluir";
+"settings.notice.detail" = "O aviso fica até você ver ou resolver: abrir o app da sessão, responder, clicar no aviso ou fechar no ×";
 "settings.group.claudeCode" = "Claude Code";
 "settings.plugin" = "Plugin da ilha";
 "settings.plugin.detail" = "Responder pela ilha no app, VS Code e terminal";
@@ -146,3 +150,8 @@
 "notice.pluginSessions.detail" = "Sessões abertas antes da instalação aparecem, mas só respondem pela ilha depois de reabertas.";
 "notice.dismiss" = "Dispensar";
 "island.updateAvailable" = "Versão nova disponível";
+
+/* Aviso proativo: desce da ilha quando uma sessão precisa de você ou conclui. */
+"notice.permission" = "Permitir: %@";
+"notice.more" = "+%d";
+"notice.close" = "Fechar aviso";

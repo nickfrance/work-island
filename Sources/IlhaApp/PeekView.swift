@@ -221,7 +221,7 @@ struct SessionRow: View {
 
 /// Ponto de 7 pt; `doneStale` é só o contorno verde. Em `working` com `animated`, respira e solta
 /// uma onda a cada 2,4 s.
-private struct StateDot: View {
+struct StateDot: View {
   let state: SessionState
   let animated: Bool
 

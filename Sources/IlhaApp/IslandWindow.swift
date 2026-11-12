@@ -17,7 +17,9 @@ import IlhaCore
 /// da janela, repassados pelos `on…`.
 @MainActor
 final class IslandWindow {
-  enum Stage { case rest, peek, panel }
+  /// `notice`: o aviso proativo, que desce sozinho da ilha e fica até você ver ou resolver cada
+  /// novidade (ou fechá-lo no ×, ou clicar nele).
+  enum Stage { case rest, peek, panel, notice }
 
   /// O estado pedido por último; durante a transição a janela ainda está a caminho dele.
   private(set) var stage: Stage = .rest
@@ -26,6 +28,10 @@ final class IslandWindow {
   var onHover: ((Bool) -> Void)?
   /// Clique na espiada (em qualquer lugar dela).
   var onPeekClick: (() -> Void)?
+  /// Clique esquerdo no aviso (em qualquer lugar dele, menos no ×).
+  var onNoticeClick: (() -> Void)?
+  /// × do aviso (clique ou leitor de tela): o aviso volta para a ilha.
+  var onNoticeClose: (() -> Void)?
   /// Clique esquerdo no lugar da ilha, que o cartão cobre.
   var onIslandClick: (() -> Void)?
   /// Clique direito (ou com Control) no lugar da ilha.
@@ -43,6 +49,8 @@ final class IslandWindow {
   private let usage: UsageController
   private let settings: SettingsStore
   private let update: UpdateController
+  /// O quadro do aviso proativo e se ele está à vista; quem o preenche é o `StatusItemController`.
+  let notice = NoticePresentation()
   /// Avisos que o painel chegou a mostrar desde que abriu: viram "vistos" quando ele volta à ilha.
   private let shownNotices = ShownNotices()
   /// Os cartões de resposta do painel, alimentados pela fila do `AppModel`.
@@ -52,6 +60,9 @@ final class IslandWindow {
   /// Tela em que o painel abre da próxima vez (o menu "Configurações…" abre direto nelas).
   private var openingRoute: PanelRouter.Route = .main
   private var requestsSink: AnyCancellable?
+  /// O quadro do aviso mudou (linha entrou, ou saiu porque você viu ou o fato passou): a casca mede de
+  /// novo e cresce ou encolhe para a altura nova.
+  private var noticeBoardSink: AnyCancellable?
   /// Pedidos já vistos na fila: um id novo tira o painel das configurações.
   private var pendingIDs: Set<UUID> = []
   private let anchor: () -> NSRect?
@@ -62,8 +73,12 @@ final class IslandWindow {
   private let panelPresentation = PanelPresentation()
   private let peekHost: PanelHostingView<PeekLayer>
   private let panelHost: PanelHostingView<PanelLayer>
+  private let noticeHost: PanelHostingView<NoticeLayer>
   private let ticker = FrameTicker()
   private var motion = ShellMotion()
+  /// Mola da transição em curso quando não é a de sempre (o aviso desce e sobe mais rápido); vale
+  /// também para os ajustes de tamanho no meio dela.
+  private var springResponse: Double?
   private var lastTick: CFTimeInterval?
   /// Quadros desenhados na transição em curso (só para o registro do modo `ILHA_DEBUG`).
   private var frameCount = 0
@@ -93,18 +108,19 @@ final class IslandWindow {
       model: model, usage: usage, deck: deck, presentation: panelPresentation, router: router,
       settings: settings, plugin: plugin, update: update, metrics: metrics, shownNotices: shownNotices,
       actions: actions))
+    noticeHost = PanelHostingView(rootView: NoticeLayer(presentation: notice))
     container = ShellContainerView(frame: NSRect(x: 0, y: 0, width: 10, height: 10))
     window = IslandPanel(contentView: container)
 
     // Fundo atrás de tudo, do tamanho da janela; as camadas de conteúdo têm largura fixa e ficam
     // presas no canto de cima à esquerda, cortadas pela casca enquanto ela cresce (como no protótipo).
     let background = BackgroundHostingView(
-      rootView: ShellBackground(model: model, deck: deck, state: shell, router: router))
+      rootView: ShellBackground(model: model, deck: deck, state: shell, router: router, notice: notice))
     background.sizingOptions = []
     background.frame = container.bounds
     background.autoresizingMask = [.width, .height]
     container.addSubview(background)
-    for host in [peekHost, panelHost] as [NSView] {
+    for host in [peekHost, panelHost, noticeHost] as [NSView] {
       host.autoresizingMask = []
       host.isHidden = true
       container.addSubview(host)
@@ -133,6 +149,17 @@ final class IslandWindow {
     }
     peekHost.onIntrinsicSizeChange = { [weak self] in self?.scheduleRelayout() }
     panelHost.onIntrinsicSizeChange = { [weak self] in self?.scheduleRelayout() }
+    noticeHost.onIntrinsicSizeChange = { [weak self] in self?.scheduleRelayout() }
+    // A hospedagem nem sempre avisa quando o conteúdo encolhe (uma linha que sai deixava o cartão
+    // alto e a outra no meio). `@Published` avisa antes de gravar; o relayout roda no giro seguinte,
+    // já com o quadro novo. Quadro vazio: quem fecha o aviso é o `StatusItemController`.
+    noticeBoardSink = notice.$board.sink { [weak self] _ in
+      MainActor.assumeIsolated {
+        guard let self, self.stage == .notice else { return }
+        self.scheduleRelayout()
+      }
+    }
+    notice.onClose = { [weak self] in self?.onNoticeClose?() }
     container.onHover = { [weak self] inside in self?.onHover?(inside) }
     window.onMouseDown = { [weak self] event in self?.handleMouseDown(event) ?? false }
     window.onCancel = { [weak self] in self?.onCancel?() }
@@ -191,13 +218,22 @@ final class IslandWindow {
     }
     let previous = stage
     stage = next
+    springResponse = ShellMetrics.springResponse(from: previous, to: next)
+    // A luz do aviso fica até a casca voltar à ilha (sem trocar de cor enquanto ela some); a espiada e
+    // o painel voltam à luz do humor.
+    switch next {
+    case .notice: setNoticeLit(true)
+    case .peek, .panel: setNoticeLit(false)
+    case .rest: break
+    }
     // Abrindo o painel: começa na tela pedida (a principal, salvo pelo menu), sem deslizar. Vale
     // também ao reabrir enquanto o cartão ainda se recolhia nas configurações.
     if next == .panel, previous != .panel {
       setRoute(openingRoute, animated: false)
       openingRoute = .main
     }
-    if next != .rest { usage.trigger(.surfaceOpened) }
+    // O aviso não mostra o uso do plano: só a espiada e o painel pedem uma leitura.
+    if next == .peek || next == .panel { usage.trigger(.surfaceOpened) }
     presentLayers(for: next)
     layoutHosts()
 
@@ -233,7 +269,8 @@ final class IslandWindow {
       radius: ShellMetrics.radius(for: next),
       glass: next == .rest ? 0 : 1,
       tint: ShellMetrics.tint(for: next),
-      opening: next != .rest)
+      opening: next != .rest,
+      response: springResponse)
     let screen = Self.screen(for: island)
     let barHeight = screen.map { $0.frame.maxY - $0.visibleFrame.maxY } ?? 0
     log("início \(Self.describe(window.frame)) ilha \(Self.describe(island)) nível \(window.level.rawValue) "
@@ -254,7 +291,7 @@ final class IslandWindow {
       return
     }
     guard target != motion.targetFrame else { return }
-    motion.retargetFrame(target, opening: stage != .rest)
+    motion.retargetFrame(target, opening: stage != .rest, response: springResponse)
     startTicking()
   }
 
@@ -267,6 +304,7 @@ final class IslandWindow {
     case .rest: return island
     case .peek: width = peekWidth; height = peekHost.frame.height
     case .panel: width = panelWidth; height = panelHost.frame.height
+    case .notice: width = noticeWidth; height = noticeHost.frame.height
     }
     var x = island.midX - width / 2
     if let visible = Self.screen(for: island)?.visibleFrame {
@@ -279,6 +317,10 @@ final class IslandWindow {
   /// As camadas têm a altura que o conteúdo pede; o painel para em 690 pt ou no fim da tela.
   private func layoutHosts() {
     let peekHeight = ceil(peekHost.fittingSize.height)
+    // O aviso mede o quadro de agora numa hospedagem nova: a camada só redesenha com o quadro novo
+    // no giro seguinte, e medi-la aqui descia o aviso vazio e o fazia crescer depois.
+    let noticeHeight = ceil(NSHostingView(rootView: NoticeLayer.measured(notice.board)
+      .environment(\.displayScale, window.backingScaleFactor)).fittingSize.height)
     var panelLimit = panelMaxHeight
     if let island = anchor(), let visible = Self.screen(for: island)?.visibleFrame {
       panelLimit = min(panelLimit, island.maxY - visible.minY - ShellMetrics.edgeMargin)
@@ -286,8 +328,10 @@ final class IslandWindow {
     let panelHeight = ceil(min(panelHost.fittingSize.height, panelLimit))
     let peekFrame = NSRect(x: 0, y: 0, width: peekWidth, height: peekHeight)
     let panelFrame = NSRect(x: 0, y: 0, width: panelWidth, height: panelHeight)
+    let noticeFrame = NSRect(x: 0, y: 0, width: noticeWidth, height: noticeHeight)
     if peekHost.frame != peekFrame { peekHost.frame = peekFrame }
     if panelHost.frame != panelFrame { panelHost.frame = panelFrame }
+    if noticeHost.frame != noticeFrame { noticeHost.frame = noticeFrame }
   }
 
   private func scheduleRelayout() {
@@ -306,9 +350,11 @@ final class IslandWindow {
   private func presentLayers(for stage: Stage) {
     peekPresentation.shown = stage == .peek
     panelPresentation.shown = stage == .panel
+    notice.shown = stage == .notice
     deck.visible = stage == .panel
     if stage == .peek { peekHost.isHidden = false }
     if stage == .panel { panelHost.isHidden = false }
+    if stage == .notice { noticeHost.isHidden = false }
     layerGeneration += 1
     let generation = layerGeneration
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
@@ -316,6 +362,7 @@ final class IslandWindow {
         guard let self, generation == self.layerGeneration else { return }
         self.peekHost.isHidden = self.stage != .peek
         self.panelHost.isHidden = self.stage != .panel
+        self.noticeHost.isHidden = self.stage != .notice
       }
     }
   }
@@ -366,6 +413,8 @@ final class IslandWindow {
     window.alphaValue = 1
     peekHost.isHidden = true
     panelHost.isHidden = true
+    noticeHost.isHidden = true
+    setNoticeLit(false)
     // De volta à ilha: o painel volta à tela principal (já escondido, sem deslizar).
     setRoute(.main, animated: false)
     markShownNoticesSeen()
@@ -383,6 +432,19 @@ final class IslandWindow {
       }
     }
     if shown.contains(.updated) { update.clearJustUpdated() }
+  }
+
+  /// Liga ou desliga a luz na cor do aviso. Com a casca à vista, a cor troca devagar (aviso → painel);
+  /// escondida, troca direto, para o aviso já nascer na cor dele.
+  private func setNoticeLit(_ lit: Bool) {
+    guard shell.noticeLit != lit else { return }
+    guard window.isVisible else {
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) { shell.noticeLit = lit }
+      return
+    }
+    shell.noticeLit = lit
   }
 
   /// Troca a tela do painel. Animada, desliza (o `PanelLayer` e o fundo têm a curva); sem animação,
@@ -500,6 +562,11 @@ final class IslandWindow {
     case .peek:
       onPeekClick?()
       return true
+    case .notice:
+      // O × fecha; o resto do aviso abre o painel. Os dois aqui, antes do conteúdo: o botão da
+      // SwiftUI fica para o leitor de tela.
+      if onNoticeCloseButton(event) { onNoticeClose?() } else { onNoticeClick?() }
+      return true
     case .panel:
       // Como no protótipo: com o painel aberto, clicar no lugar da ilha não fecha (fecham clique
       // fora, Esc e as linhas). O clique segue para o conteúdo; mexer no painel aberto sozinho
@@ -512,6 +579,31 @@ final class IslandWindow {
       onIslandClick?()
       return true
     }
+  }
+
+  /// Modo de teste (`ILHA_DEBUG_CLICK_NOTICE`): um clique esquerdo (aperta e solta) no meio do aviso,
+  /// longe do ×, pelo `sendEvent` da janela, o mesmo caminho de um clique de verdade. `false` sem
+  /// aviso na tela ou se o evento não pôde ser criado.
+  @discardableResult
+  func debugClickNoticeCenter() -> Bool {
+    guard stage == .notice, window.isVisible else { return false }
+    let bounds = container.bounds
+    let point = NSPoint(x: bounds.midX, y: bounds.midY)
+    for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+      guard let event = NSEvent.mouseEvent(
+        with: type, location: point, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+        windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: type == .leftMouseDown ? 1 : 0)
+      else { return false }
+      window.sendEvent(event)
+    }
+    return true
+  }
+
+  /// O clique caiu no × do aviso? Na camada do aviso, com y para baixo a partir do topo.
+  private func onNoticeCloseButton(_ event: NSEvent) -> Bool {
+    let local = noticeHost.convert(event.locationInWindow, from: nil)
+    let point = CGPoint(x: local.x, y: noticeHost.isFlipped ? local.y : noticeHost.bounds.height - local.y)
+    return NoticeClose.hitRect(topInset: peekTopInset).contains(point)
   }
 
   // MARK: - Utilidades
@@ -548,6 +640,7 @@ private enum ShellMetrics {
   static let restRadius: CGFloat = 9
   static let peekRadius: CGFloat = 22
   static let panelRadius: CGFloat = 26
+  static let noticeRadius: CGFloat = 18
   static let edgeMargin: CGFloat = 10
 
   static func radius(for stage: IslandWindow.Stage) -> CGFloat {
@@ -555,22 +648,31 @@ private enum ShellMetrics {
     case .rest: return restRadius
     case .peek: return peekRadius
     case .panel: return panelRadius
+    case .notice: return noticeRadius
     }
   }
 
-  /// Luz do estado vinda de cima: inteira no painel, fraca na espiada (como no protótipo).
+  /// Luz do estado vinda de cima: inteira no painel e no aviso, fraca na espiada (como no protótipo).
   static func tint(for stage: IslandWindow.Stage) -> Double {
     switch stage {
     case .rest: return 0
     case .peek: return 0.35
-    case .panel: return 1
+    case .panel, .notice: return 1
     }
+  }
+
+  /// O aviso desce numa mola de 0,35 s (com o leve passo além) e, dele à ilha, sobe em 0,25 s sem
+  /// passar do ponto. `nil`: as molas de sempre (0,46 s abrindo, 0,3 s fechando).
+  static func springResponse(from previous: IslandWindow.Stage, to next: IslandWindow.Stage) -> Double? {
+    if next == .notice { return 0.35 }
+    if previous == .notice, next == .rest { return 0.25 }
+    return nil
   }
 }
 
-/// O conteúdo começa 30 pt abaixo do topo do cartão (a altura da ilha e mais 12), como no protótipo:
-/// a faixa de cima fica sobre a barra de menu, onde a ilha estava. A espiada já tem 11 pt de margem.
-private let peekTopInset: CGFloat = 19
+/// A espiada e o aviso começam 12 pt abaixo do topo do cartão (1 + os 11 pt de margem da própria
+/// view): sem a alça, a faixa da ilha sobrava vazia em cima.
+private let peekTopInset: CGFloat = 1
 /// No painel o conteúdo começa 14 pt abaixo do topo, mais os 12 pt de folga do próprio cartão.
 private let panelTopInset: CGFloat = 14
 
@@ -665,15 +767,18 @@ private struct ShellMotion {
 
   /// Abrir: mola de 460 ms com um leve passo além (0,82), o vidro chegando em ~500 ms. Fechar: ~300 ms,
   /// sem passar do ponto (a casca não pode ficar menor que a ilha), voltando ao preto antes de pousar.
-  mutating func retarget(frame: NSRect, radius r: CGFloat, glass g: Double, tint t: Double, opening: Bool) {
-    retargetFrame(frame, opening: opening)
-    radius.retarget(r, response: opening ? 0.46 : 0.3, damping: opening ? 0.82 : 1)
+  /// `response` troca o tempo do frame e dos cantos (o aviso); o amortecimento segue o sentido.
+  mutating func retarget(
+    frame: NSRect, radius r: CGFloat, glass g: Double, tint t: Double, opening: Bool, response: Double? = nil
+  ) {
+    retargetFrame(frame, opening: opening, response: response)
+    radius.retarget(r, response: response ?? (opening ? 0.46 : 0.3), damping: opening ? 0.82 : 1)
     glass.retarget(g, response: opening ? 0.5 : 0.26, damping: 1)
     tint.retarget(t, response: opening ? 0.5 : 0.24, damping: 1)
   }
 
-  mutating func retargetFrame(_ frame: NSRect, opening: Bool) {
-    let response = opening ? 0.46 : 0.3
+  mutating func retargetFrame(_ frame: NSRect, opening: Bool, response custom: Double? = nil) {
+    let response = custom ?? (opening ? 0.46 : 0.3)
     let damping = opening ? 0.82 : 1
     left.retarget(frame.minX, response: response, damping: damping)
     top.retarget(frame.maxY, response: response, damping: damping)
@@ -828,36 +933,68 @@ private final class ShellState: ObservableObject {
   @Published var glass: Double = 0
   /// Força da luz do estado vinda de cima.
   @Published var tint: Double = 0
+  /// A luz de cima tem a cor do aviso (âmbar ou verde) em vez da do humor: do aviso até a casca
+  /// voltar à ilha ou virar espiada ou painel.
+  @Published var noticeLit = false
 }
 
 /// O fundo da casca: o vidro escuro de sempre, coberto pelo preto da ilha que vai sumindo, a luz da
-/// cor do estado e o fio claro da borda (30% na ilha, 16% no cartão).
+/// cor do estado e o fio claro da borda (30% na ilha, 16% no cartão). No aviso só com "concluído",
+/// a borda fica verde, com o brilho da etiqueta "trabalhando" passando por ela (parada com Reduzir
+/// movimento).
 private struct ShellBackground: View {
   @ObservedObject var model: AppModel
   @ObservedObject var deck: RequestDeck
   @ObservedObject var state: ShellState
   @ObservedObject var router: PanelRouter
+  @ObservedObject var notice: NoticePresentation
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   var body: some View {
     let shape = RoundedRectangle(cornerRadius: state.radius, style: .continuous)
     let mood = deck.accent(sessions: model.store.ordered())
+    // No aviso, a luz é a do que aconteceu (âmbar se alguma linha precisa de você, senão verde).
+    let noticeGlow: Color? = state.noticeLit ? notice.board.kind.glow : nil
+    // A base tem o tamanho exato da casca. O vidro e a luz ficam no fundo dela, como antes: a luz
+    // (`TintGlow`) pede no mínimo 220 pt de altura, e a pilha deles passa da casca baixa (o aviso),
+    // centrada; o que sobra em cima e embaixo fica fora do recorte. Por isso a borda verde mora na
+    // base, e não na pilha: lá ela perdia o fio de cima, o de baixo e os quatro cantos.
+    Color.clear
+      .background { glassAndLight(shape: shape, mood: mood, noticeGlow: noticeGlow) }
+      .overlay {
+        // Só no estágio do aviso (`shown`) e sem "precisa de você" (a luz âmbar de cima já marca).
+        if notice.shown && notice.board.isOnlyDone {
+          ZStack {
+            shape.strokeBorder(Palette.done, lineWidth: noticeBorderWidth)
+            if !reduceMotion { BorderShimmer(radius: state.radius, lineWidth: noticeBorderWidth) }
+          }
+          .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+        }
+      }
+      .environment(\.colorScheme, .dark)
+      .allowsHitTesting(false)
+  }
+
+  /// O vidro, o preto da ilha, a luz e o fio claro, sem mudança: a pilha se mede como sempre.
+  private func glassAndLight(shape: RoundedRectangle, mood: SphereMood, noticeGlow: Color?) -> some View {
     ZStack {
       GlassBackground(cornerRadius: state.radius)
       shape.fill(Color.black).opacity(1 - state.glass)
       // Nas configurações a luz do estado esmaece para 35%, no ritmo do deslize.
-      TintGlow(color: mood.glow)
+      TintGlow(color: noticeGlow ?? mood.glow)
         .opacity(state.tint)
         .opacity(router.route == .settings ? 0.35 : 1)
         .clipShape(shape)
         .animation(.easeInOut(duration: 0.6), value: mood)
+        .animation(.easeInOut(duration: 0.6), value: noticeGlow)
         .animation(PanelRouteMotion.animation(reduceMotion: reduceMotion), value: router.route)
     }
     .overlay(shape.strokeBorder(Color.white.opacity(0.3 * (1 - state.glass)), lineWidth: 0.5))
-    .environment(\.colorScheme, .dark)
-    .allowsHitTesting(false)
   }
 }
+
+/// Espessura da borda verde do aviso "concluído".
+private let noticeBorderWidth: CGFloat = 1.5
 
 // MARK: - Camadas de conteúdo
 
@@ -889,6 +1026,24 @@ private struct PeekLayer: View {
       active: presentation.shown)
       .padding(.top, peekTopInset)
       .fixedSize()
+      .modifier(LayerFade(shown: presentation.shown))
+  }
+}
+
+/// O aviso proativo, preso ao topo como a espiada.
+private struct NoticeLayer: View {
+  @ObservedObject var presentation: NoticePresentation
+
+  /// O mesmo conteúdo, sem o esmaecer, para medir a altura de um quadro.
+  static func measured(_ board: NoticeBoard) -> some View {
+    NoticeView(board: board).padding(.top, peekTopInset).fixedSize()
+  }
+
+  var body: some View {
+    NoticeView(board: presentation.board, onClose: { presentation.onClose() })
+      .padding(.top, peekTopInset)
+      .fixedSize()
+      .environment(\.layerShown, presentation.shown)
       .modifier(LayerFade(shown: presentation.shown))
   }
 }

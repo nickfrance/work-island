@@ -103,11 +103,13 @@ struct PanelView: View {
           .frame(height: 1)
           .opacity(state.offset > 2 ? 1 : 0)
       }
-      // Só no painel (a espiada é outra view), a 12 pt do canto.
+      // Só no painel (a espiada é outra view): 12 pt da borda direita e o alvo a 10 pt do topo do
+      // cartão (o conteúdo começa 14 pt abaixo dele).
       .overlay(alignment: .topTrailing) {
         if let onSettings {
           GearButton(dot: gearDot, action: onSettings)
-            .padding(12)
+            .padding(.trailing, 12)
+            .padding(.top, -4)
         }
       }
       if let request {

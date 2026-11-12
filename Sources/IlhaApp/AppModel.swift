@@ -24,6 +24,9 @@ final class AppModel: ObservableObject {
   var onTurnEnded: (() -> Void)?
   /// Pedido novo na fila. `originFrontmost`: o app da sessão (regra do `HostAppOpener`) está na frente.
   var onRequestArrived: ((PendingRequest, _ originFrontmost: Bool) -> Void)?
+  /// Sessão que acabou de chegar a `needsYou` ou `done` (a mesma regra do brilho), chamada antes de o
+  /// brilho se calar com o app de origem na frente: o aviso proativo avisa mesmo assim.
+  var onAttention: ((String, SessionState) -> Void)?
   /// Pedido respondido pela ilha (ou devolvido ao app de origem): usado pelas métricas.
   var onAnswered: ((PendingRequest, AnsweredOutcome) -> Void)?
 
@@ -366,6 +369,7 @@ final class AppModel: ObservableObject {
   /// Acende a ilha se a sessão acabou de chegar a `needsYou` ou `done` (vinda de `previous`).
   private func callAttention(_ id: String, previous: SessionState?) {
     guard store.needsAttention(id, previous: previous), let session = store.sessions[id] else { return }
+    onAttention?(id, session.state)
     // Concluiu no app que já está na frente: você já está vendo, então fica verde em silêncio.
     if session.state == .done,
        let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,

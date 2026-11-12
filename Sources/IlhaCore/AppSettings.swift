@@ -27,6 +27,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
   public var openAtLogin = true
   public var metricsEnabled = true
   public var dormant = DormantChoice.h12
+  /// Avisos proativos da ilha (sem métrica): quando uma sessão precisa de você / quando conclui.
+  public var noticeNeedsYou = true
+  public var noticeDone = true
   public var anonymousID: UUID? = nil
   public var metricsNoticeSeen = false
   public var pluginNoticeSeen = false
@@ -37,7 +40,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
   public init() {}
 
   private enum CodingKeys: String, CodingKey {
-    case openAtLogin, metricsEnabled, dormant, anonymousID, metricsNoticeSeen, pluginNoticeSeen
+    case openAtLogin, metricsEnabled, dormant, noticeNeedsYou, noticeDone, anonymousID, metricsNoticeSeen, pluginNoticeSeen
     case dismissedUpdate, lastRunVersion, installedPluginVersion
   }
 
@@ -49,6 +52,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     openAtLogin = (try? c.decodeIfPresent(Bool.self, forKey: .openAtLogin)) ?? openAtLogin
     metricsEnabled = (try? c.decodeIfPresent(Bool.self, forKey: .metricsEnabled)) ?? metricsEnabled
     dormant = (try? c.decodeIfPresent(DormantChoice.self, forKey: .dormant)) ?? dormant
+    noticeNeedsYou = (try? c.decodeIfPresent(Bool.self, forKey: .noticeNeedsYou)) ?? noticeNeedsYou
+    noticeDone = (try? c.decodeIfPresent(Bool.self, forKey: .noticeDone)) ?? noticeDone
     anonymousID = try? c.decodeIfPresent(UUID.self, forKey: .anonymousID)
     metricsNoticeSeen = (try? c.decodeIfPresent(Bool.self, forKey: .metricsNoticeSeen)) ?? metricsNoticeSeen
     pluginNoticeSeen = (try? c.decodeIfPresent(Bool.self, forKey: .pluginNoticeSeen)) ?? pluginNoticeSeen

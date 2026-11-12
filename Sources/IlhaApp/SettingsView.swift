@@ -41,6 +41,7 @@ struct SettingsView: View {
       SettingsNavBar(onBack: onBack)
       general
       sessions
+      notices
       claudeCode
       Spacer(minLength: 18)
       SettingsFooterBar(footer: footer, onQuit: onQuit)
@@ -91,6 +92,24 @@ struct SettingsView: View {
     }
   }
 
+  private var notices: some View {
+    SettingsGroup(title: L10n.string("settings.group.notices")) {
+      SettingsItem(
+        title: L10n.string("settings.notice.needsYou"), detail: L10n.string("settings.notice.detail")
+      ) {
+        Toggle(isOn: noticeNeedsYou) { EmptyView() }
+          .toggleStyle(IslandSwitchStyle())
+          .accessibilityLabel(Text(verbatim: L10n.string("settings.notice.needsYou")))
+      }
+      SettingsDivider()
+      SettingsItem(title: L10n.string("settings.notice.done")) {
+        Toggle(isOn: noticeDone) { EmptyView() }
+          .toggleStyle(IslandSwitchStyle())
+          .accessibilityLabel(Text(verbatim: L10n.string("settings.notice.done")))
+      }
+    }
+  }
+
   private var claudeCode: some View {
     SettingsGroup(title: L10n.string("settings.group.claudeCode")) {
       SettingsItem(title: L10n.string("settings.plugin"), detail: L10n.string("settings.plugin.detail")) {
@@ -122,6 +141,18 @@ struct SettingsView: View {
     Binding(
       get: { settings.settings.metricsEnabled },
       set: { on in settings.update { $0.metricsEnabled = on } })
+  }
+
+  private var noticeNeedsYou: Binding<Bool> {
+    Binding(
+      get: { settings.settings.noticeNeedsYou },
+      set: { on in settings.update { $0.noticeNeedsYou = on } })
+  }
+
+  private var noticeDone: Binding<Bool> {
+    Binding(
+      get: { settings.settings.noticeDone },
+      set: { on in settings.update { $0.noticeDone = on } })
   }
 
   private var dormant: Binding<DormantChoice> {

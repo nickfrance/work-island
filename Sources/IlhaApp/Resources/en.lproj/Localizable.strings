@@ -112,6 +112,10 @@
 "settings.dormant.h12" = "12 h";
 "settings.dormant.h24" = "24 h";
 "settings.dormant.never" = "Never";
+"settings.group.notices" = "Alerts";
+"settings.notice.needsYou" = "Alert when a session needs you";
+"settings.notice.done" = "Alert when a session is done";
+"settings.notice.detail" = "The alert stays until you see or resolve it: open the session's app, reply, click the alert or close it with ×";
 "settings.group.claudeCode" = "Claude Code";
 "settings.plugin" = "Island plugin";
 "settings.plugin.detail" = "Answer from the island in the app, VS Code and terminal";
@@ -146,3 +150,8 @@
 "notice.pluginSessions.detail" = "Sessions opened before the install show up, but only answer through the island once reopened.";
 "notice.dismiss" = "Dismiss";
 "island.updateAvailable" = "New version available";
+
+/* Proactive alert: drops from the island when a session needs you or is done. */
+"notice.permission" = "Allow: %@";
+"notice.more" = "+%d";
+"notice.close" = "Close alert";

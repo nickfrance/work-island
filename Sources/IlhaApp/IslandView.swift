@@ -150,18 +150,23 @@ private struct Shimmer: NSViewRepresentable {
 }
 
 final class ShimmerLayerView: NSView {
-  private static let sweepKey = "ilha.sweep"
+  static let sweepKey = "ilha.sweep"
   /// Passada de 1,08 s e descanso de 0,72 s.
-  private static let pass: CFTimeInterval = 1.08
-  private static let rest: CFTimeInterval = 0.72
+  static let pass: CFTimeInterval = 1.08
+  static let rest: CFTimeInterval = 0.72
 
-  private let gradient = CAGradientLayer()
+  private let gradient = ShimmerLayerView.band()
   /// Largura para a qual a animação atual foi montada; muda quando o nome da etiqueta muda.
   private var animatedWidth: CGFloat = -1
 
   override init(frame: NSRect) {
     super.init(frame: frame)
     wantsLayer = true
+  }
+
+  /// A faixa branca translúcida, da esquerda para a direita, fora da tela até a animação começar.
+  static func band() -> CAGradientLayer {
+    let gradient = CAGradientLayer()
     // Branco transparente nas pontas (e não `clear`, que é preto): a interpolação não acinzenta.
     gradient.colors = [
       NSColor(white: 1, alpha: 0).cgColor,
@@ -170,8 +175,24 @@ final class ShimmerLayerView: NSView {
     ]
     gradient.startPoint = CGPoint(x: 0, y: 0.5)
     gradient.endPoint = CGPoint(x: 1, y: 0.5)
-    // Fora da tela até a animação começar.
     gradient.position = CGPoint(x: -10_000, y: 0)
+    return gradient
+  }
+
+  /// A passada da faixa (com a largura de quem brilha) de inteira à esquerda a inteira à direita,
+  /// e o descanso, sem parar.
+  static func sweep(width: CGFloat) -> CAKeyframeAnimation {
+    let sweep = CAKeyframeAnimation(keyPath: "position.x")
+    sweep.values = [-width / 2, width * 1.5, width * 1.5]
+    sweep.keyTimes = [0, NSNumber(value: pass / (pass + rest)), 1]
+    sweep.timingFunctions = [
+      CAMediaTimingFunction(name: .easeInEaseOut),
+      CAMediaTimingFunction(name: .linear),
+    ]
+    sweep.duration = pass + rest
+    sweep.repeatCount = .infinity
+    sweep.isRemovedOnCompletion = false
+    return sweep
   }
 
   @available(*, unavailable)
@@ -210,17 +231,93 @@ final class ShimmerLayerView: NSView {
     gradient.removeAnimation(forKey: Self.sweepKey)
     guard width > 0, window != nil else { return }
     // A faixa tem a largura da etiqueta e vai de inteira à esquerda a inteira à direita.
-    let sweep = CAKeyframeAnimation(keyPath: "position.x")
-    sweep.values = [-width / 2, width * 1.5, width * 1.5]
-    sweep.keyTimes = [0, NSNumber(value: Self.pass / (Self.pass + Self.rest)), 1]
-    sweep.timingFunctions = [
-      CAMediaTimingFunction(name: .easeInEaseOut),
-      CAMediaTimingFunction(name: .linear),
-    ]
-    sweep.duration = Self.pass + Self.rest
-    sweep.repeatCount = .infinity
-    sweep.isRemovedOnCompletion = false
-    gradient.add(sweep, forKey: Self.sweepKey)
+    gradient.add(Self.sweep(width: width), forKey: Self.sweepKey)
+  }
+}
+
+/// O brilho da etiqueta "trabalhando" passando pela borda do aviso "concluído": a mesma faixa, no
+/// mesmo ritmo, com a largura do aviso, recortada no fio da borda (com os cantos da casca, que
+/// mudam enquanto ela cresce). Core Animation, como o da etiqueta: quase não gasta CPU do app.
+struct BorderShimmer: NSViewRepresentable {
+  let radius: CGFloat
+  let lineWidth: CGFloat
+
+  func makeNSView(context: Context) -> BorderShimmerView { BorderShimmerView(lineWidth: lineWidth) }
+  func updateNSView(_ nsView: BorderShimmerView, context: Context) { nsView.radius = radius }
+}
+
+final class BorderShimmerView: NSView {
+  var radius: CGFloat = 0 {
+    didSet { if radius != oldValue { needsLayout = true } }
+  }
+
+  private let lineWidth: CGFloat
+  private let gradient = ShimmerLayerView.band()
+  /// O fio da borda: só a faixa que passa por ele aparece.
+  private let ring = CAShapeLayer()
+  private var animatedWidth: CGFloat = -1
+
+  init(lineWidth: CGFloat) {
+    self.lineWidth = lineWidth
+    super.init(frame: .zero)
+    wantsLayer = true
+    ring.fillColor = nil
+    ring.strokeColor = NSColor.white.cgColor
+    ring.lineWidth = lineWidth
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) { fatalError("init(coder:) não é usado") }
+
+  override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+  override func layout() {
+    super.layout()
+    guard let layer else { return }
+    let size = bounds.size
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    if gradient.superlayer !== layer {
+      layer.addSublayer(gradient)
+      layer.mask = ring
+    }
+    // Na escala da tela (Retina): sem isso o fio da máscara sai em 1x, borrado.
+    let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+    if ring.contentsScale != scale {
+      ring.contentsScale = scale
+      gradient.contentsScale = scale
+    }
+    ring.frame = bounds
+    // O mesmo contorno do `strokeBorder` da SwiftUI: cantos contínuos, fio todo por dentro.
+    let r = min(max(radius, 0), min(size.width, size.height) / 2)
+    ring.path = RoundedRectangle(cornerRadius: r, style: .continuous)
+      .inset(by: lineWidth / 2)
+      .path(in: CGRect(origin: .zero, size: size))
+      .cgPath
+    gradient.bounds = CGRect(origin: .zero, size: size)
+    gradient.position = CGPoint(x: -size.width / 2, y: size.height / 2)
+    CATransaction.commit()
+    if size.width != animatedWidth { startSweep() }
+  }
+
+  override func viewDidMoveToWindow() {
+    super.viewDidMoveToWindow()
+    animatedWidth = -1
+    if window != nil { needsLayout = true } else { gradient.removeAnimation(forKey: ShimmerLayerView.sweepKey) }
+  }
+
+  /// A janela mudou de tela (outra escala): a máscara redesenha na escala nova.
+  override func viewDidChangeBackingProperties() {
+    super.viewDidChangeBackingProperties()
+    needsLayout = true
+  }
+
+  private func startSweep() {
+    let width = bounds.width
+    animatedWidth = width
+    gradient.removeAnimation(forKey: ShimmerLayerView.sweepKey)
+    guard width > 0, window != nil else { return }
+    gradient.add(ShimmerLayerView.sweep(width: width), forKey: ShimmerLayerView.sweepKey)
   }
 }
 

@@ -20,4 +20,13 @@ public enum IslandAnchor {
       screen != home && mirrored(rect, from: home, to: screen).insetBy(dx: -4, dy: -4).contains(mouse)
     } ?? home
   }
+
+  /// A tela que contém o mouse; nenhuma (mouse fora de todas) devolve `nil`. As bordas contam: o
+  /// mouse empurrado ao topo de uma tela cheia (para revelar a barra) fica em `y == maxY`, que o
+  /// `CGRect.contains` deixa de fora. Na borda comum a duas telas, vale a primeira.
+  public static func screen(containing mouse: CGPoint, screens: [CGRect]) -> CGRect? {
+    screens.first { screen in
+      (screen.minX...screen.maxX).contains(mouse.x) && (screen.minY...screen.maxY).contains(mouse.y)
+    }
+  }
 }

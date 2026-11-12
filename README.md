@@ -60,7 +60,9 @@ Remove o plugin do Claude Code, o item de início, o app e a pasta de dados (`~/
 
 Passe o mouse na ilha para ver a espiada, com as sessões e o uso do plano. Clique para abrir o painel. Clique numa sessão para trazer o app dela para a frente. Clique com o botão direito numa sessão e escolha "Remover da ilha" para tirá-la da lista. Ela volta sozinha quando fizer algo novo.
 
-As configurações ficam na engrenagem do painel, ou no clique direito na ilha → "Configurações…" (⌘,): abrir ao ligar o Mac, tirar da ilha sessões paradas há 6 h, 12 h, 24 h ou nunca, e o estado do plugin (com "Instalar de novo", se algo deu errado).
+**Avisos.** Quando uma sessão precisa de você ou conclui, a ilha desce um aviso curto, mesmo sem o mouse em cima. Ele fica até você ver ou resolver: abrir o app da sessão, responder, clicar nele ou fechar no ×. Dá para desligar cada tipo nas configurações.
+
+As configurações ficam na engrenagem do painel, ou no clique direito na ilha → "Configurações…" (⌘,): abrir ao ligar o Mac, tirar da ilha sessões paradas há 6 h, 12 h, 24 h ou nunca, avisar quando precisar de você e quando concluir, e o estado do plugin (com "Instalar de novo", se algo deu errado).
 
 Idiomas: português (padrão) e inglês, escolhidos pelo idioma do macOS, inclusive nos cartões, nas horas e nas datas.
 
